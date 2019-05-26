@@ -18,24 +18,33 @@ import java.util.concurrent.Future;
 
 public class Ex3B {
 	
-	public static int result = 0;
+	
+	/**
+	 * gets a number and creates that amount of files which each one has a random amount of lines
+	 * each line only has : "Hello World"
+	 * @param n
+	 * @return an array with a list of names of all the files created
+	 */
 	public static String[] createFiles(int n) {
 		
 		String[] list = new String[n];
 		String nameI = "File_";
+		/**
+		 * same random seed so we will the same amount of lines every time
+		 */
 		Random rnd = new Random(123);
 		
 		for (int i =1 ; i<n+1; i++) {
 			nameI = nameI+i;
 			 try {
-		            //Whatever the file path is.
-		            File statText = new File("C:/Users/yehud/eclipse-workspace/muncheAtzamin3/src/"+nameI+".txt");
-		            FileOutputStream is = new FileOutputStream(statText);
-		            OutputStreamWriter osw = new OutputStreamWriter(is);    
-		            PrintWriter w = new PrintWriter(osw);
-		            int length = rnd.nextInt(1000);
-		            //System.out.println(length);
-		            for (int j = 0; j<length; j++) {
+				 //Whatever the file path is.
+				File statText = new File(nameI+".txt");
+			            FileOutputStream is = new FileOutputStream(statText);
+			            OutputStreamWriter osw = new OutputStreamWriter(is);    
+			            PrintWriter w = new PrintWriter(osw);
+			            int length = rnd.nextInt(1000);
+			            //System.out.println(length);
+			            for (int j = 0; j<length; j++) {
 		            	 w.println("Hello World");	
 		            }
 		            w.close();
@@ -51,7 +60,7 @@ public class Ex3B {
 	public static void deleteFiles(String[] fileNames) { 
 		for (int i = 0; i < fileNames.length; i++) {
 			try {
-				File file = new File("C:/Users/yehud/eclipse-workspace/muncheAtzamin3/src/"+fileNames[i]+".txt");
+				File file = new File(fileNames[i]+".txt");
 				file.delete();
 			}
 			catch(Exception e){
@@ -61,22 +70,28 @@ public class Ex3B {
 	}
 	
 	public static void countLinesThreads(int numFiles) {
-		//int lineNum = 0;
+		int lineNum = 0;
 		String[] fileList = createFiles(numFiles);
+		LineCounter[] counters = new LineCounter[numFiles];
 		long start = System.currentTimeMillis();
 		for (int i = 0; i < fileList.length; i++) {
-			Thread t = new Thread(new LineCounter("C:/Users/yehud/eclipse-workspace/muncheAtzamin3/src/"+fileList[i]+".txt"));
-			t.start();
+			counters[i] = new LineCounter(fileList[i]+".txt");
+			counters[i].start();
+		}
+		
 			try {
-				t.join();
-			}
-			catch (InterruptedException e) {
+				for (LineCounter lc : counters) {
+					lc.join();
+				}
+			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			//lineNum = lineNum+t.getSum();
-		}
-		System.out.println("line sum is "+result);
+		for (LineCounter lc : counters) {
+			lineNum += lc.getNum();
+		}	
+		
+		System.out.println("line sum is "+lineNum);
 		System.out.println("in regular threads Lapse = " + (System.currentTimeMillis() - start)+ " miliseconds");
 		deleteFiles(fileList);
 	}
@@ -89,7 +104,7 @@ public class Ex3B {
 		for (int i = 0; i < fileList.length; i++) {
 			FileReader fr = null;
 			try {
-				fr = new FileReader("C:/Users/yehud/eclipse-workspace/muncheAtzamin3/src/"+fileList[i]+".txt");
+				fr = new FileReader(fileList[i]+".txt");
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -115,10 +130,10 @@ public class Ex3B {
 		Integer lineNum = 0;
 		String[] fileList = createFiles(numFiles);
 		long start = System.currentTimeMillis();
-		ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(4);
+		ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(5);
         List<Future<Integer>> resultList = new ArrayList<>();
         for (int i = 0; i < numFiles; i++) {
-        	CounterLine count  = new CounterLine("C:/Users/yehud/eclipse-workspace/muncheAtzamin3/src/"+fileList[i]+".txt");
+        	CounterLine count  = new CounterLine(fileList[i]+".txt");
             Future<Integer> result = executor.submit(count);
             resultList.add(result);
         }
@@ -139,21 +154,12 @@ public class Ex3B {
 	}
 
 	public static void main(String[] args) {
-		countLinesThreads(100);
-		try {
-			TimeUnit.SECONDS.sleep(1);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		countLinesOneProcess(100);
-		try {
-			TimeUnit.SECONDS.sleep(1);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		countLinesThreadPool(100);
+		
+		countLinesOneProcess(1000);
+		
+		countLinesThreads(1000);
+	
+		countLinesThreadPool(1000);
 		
 	  }
 
