@@ -1,4 +1,5 @@
 import java.io.FileReader;
+import java.io.IOException;
 import java.io.LineNumberReader;
 
 /**
@@ -40,6 +41,11 @@ public class LineCounter extends Thread {
 			/**
 			 * the result from each thread is saved in a variable in the thread then we will get it when all the threads finish
 			 */
+			try {
+				fr.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 			num = lnr.getLineNumber();
 			
 		}
